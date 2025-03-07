@@ -1,28 +1,64 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import emailjs from "@emailjs/browser"; // Import EmailJS
 
-const teamNames = [
-  "Tech Wise",
-  "Tech Rockers",
-  "Code Nest",
-  "Cypher Sprinters",
-  "Dominators"
+const teamNames = ["Tech Wise", "Tech Rockers", "Code Nest", "Cypher Sprinters", "Dominators"];
+
+const competitions = [
+  { id: "code-warriors", title: "Sutra Canvas(Code Design)" },
+  { id: "robo-race", title: "Chakravyuh(Surprise Event)" },
+  { id: "hack-quest", title: "Reel Rang(Reel-a-Thon)" },
+  { id: "innovation-summit", title: "Rangmanch(Fashion Show)" },
+  { id: "ai-challenge", title: "Rasoi Rang(Food Mela )" },
+  { id: "tech-olympiad", title: "Tantra Nayak(IT Manager)" },
+  { id: "Gaming", title: "Khel Rang(Gaming)" },
 ];
 
 const RegistrationForm = () => {
   const { competition } = useParams();
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null); // Use ref for form data
   const [teamSize, setTeamSize] = useState(1);
   const [formData, setFormData] = useState({
     teamName: teamNames[0],
-    competition: competition || '',
-    members: Array(4).fill({ name: '' })
+    competition: competition || "",
+    members: Array(4).fill({ name: "" }),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate('/success');
+  
+    // Format the members list properly
+    const membersList = formData.members
+      .slice(0, teamSize) // Only include the required members
+      .map((m, i) => `Member ${i + 1}: ${m.name} (${m.email})`) // Format
+      .join("\n"); // Separate members by new lines
+  
+      const selectedCompetition = competitions.find(
+        (comp) => comp.id === formData.competition
+      );
+      const competitionTitle = selectedCompetition ? selectedCompetition.title : formData.competition;
+      
+      const emailParams = {
+        teamName: formData.teamName,
+        competition: competitionTitle, // ✅ Now it will show the correct event name
+        members: membersList, // Pass the formatted string for members
+      };
+  
+    // Send email via EmailJS
+    emailjs
+      .send("service_0e5fgu9", "template_bnht89j", emailParams, "IkLvf_XBImktHMjEW")
+      .then(
+        () => {
+          alert("Registration successful! Confirmation email sent.");
+          navigate("/success");
+        },
+        (error) => {
+          alert("Error sending email. Please try again.");
+          console.error(error.text);
+        }
+      );
   };
 
   return (
@@ -32,12 +68,17 @@ const RegistrationForm = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-2xl mx-auto bg-black/80 p-6 sm:p-8 rounded-xl shadow-xl"
       >
-        <h2 className="text-center text-3xl sm:text-4xl font-bold text-yellow-500 mb-6 sm:mb-8">Team Registration</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="text-center text-3xl sm:text-4xl font-bold text-yellow-500 mb-6 sm:mb-8">
+          Team Registration
+        </h2>
+
+        {/* Updated: Added formRef for EmailJS */}
+        <form ref={formRef} onSubmit={sendEmail} className="space-y-6">
           <div>
             <label className="block text-yellow-500 mb-2">Team Name</label>
             <select
-              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+              name="teamName"
+              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50"
               value={formData.teamName}
               onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
               required
@@ -51,7 +92,8 @@ const RegistrationForm = () => {
           <div>
             <label className="block text-yellow-500 mb-2">Competition</label>
             <select
-              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+              name="competition"
+              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50"
               value={formData.competition}
               onChange={(e) => setFormData({ ...formData, competition: e.target.value })}
               required
@@ -70,7 +112,7 @@ const RegistrationForm = () => {
           <div>
             <label className="block text-yellow-500 mb-2">Number of Participants</label>
             <select
-              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+              className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50"
               value={teamSize}
               onChange={(e) => setTeamSize(Number(e.target.value))}
               required
@@ -94,7 +136,8 @@ const RegistrationForm = () => {
                 <label className="block text-yellow-500 mb-2">Name</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+                  name={`member_${idx}`}  // Name for EmailJS
+                  className="w-full px-4 py-2 rounded bg-gray-800/50 text-white border border-yellow-500/50"
                   value={formData.members[idx].name}
                   onChange={(e) => {
                     const newMembers = [...formData.members];
