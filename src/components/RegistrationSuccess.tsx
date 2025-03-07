@@ -23,7 +23,7 @@ const RegistrationSuccess = () => {
         </motion.div>
         
         <h2 className="text-3xl font-bold text-yellow-500 mb-4">Registration Successful!</h2>
-        <p className="text-white mb-8">Thank you for registering. We'll contact you shortly with further details.</p>
+        <p className="text-white mb-8">Thank you for registering. We'll contact you shortly with further details!</p>
         
         <motion.button
           whileHover={{ scale: 1.05 }}
